@@ -81,6 +81,10 @@ public class MainActivity extends Activity {
         btnUpby1.setOnClickListener(btnUpby1Listener);
         btnUpby10.setOnClickListener(btnUpby10Listener);
 
+    
+        btnBind.setVisibility(View.INVISIBLE);
+        btnUnbind.setVisibility(View.INVISIBLE);
+        
         restoreMe(savedInstanceState);
 
         CheckIfServiceIsRunning();
@@ -109,7 +113,16 @@ public class MainActivity extends Activity {
 
     private OnClickListener btnStartListener = new OnClickListener() {
         public void onClick(View v){
-            startService(new Intent(MainActivity.this, MyService.class));
+        	 Bundle b = new Bundle();
+             b.putString("host", "192.168.1.84");
+             b.putString("routing_key", "anonymous.info");
+             b.putString("exchange_name", "topic_logs");
+             Intent i = new Intent(MainActivity.this, MyService.class);
+             i.putExtras(b);
+
+             startService(i);
+        
+            doBindService();
         }
     };
     private OnClickListener btnStopListener = new OnClickListener() {
