@@ -28,7 +28,8 @@ import com.rabbitmq.client.ShutdownSignalException;
 
 
 public class MyService extends Service {
-	private String QUEUE_NAME = "android";
+	private String QUEUE_NAME = "sensorHR";
+	 private static final String EXCHANGE_NAME = "topic_logs";
 	private String HOST = "192.168.1.84";
 	private ArrayList<String> arr = new ArrayList<String>();
 	private ConnectionFactory factory = new ConnectionFactory();
@@ -97,13 +98,19 @@ public class MyService extends Service {
     @Override
     public void onCreate() {
         super.onCreate();
+        factory = new ConnectionFactory();
+        Log.i("CONNECTION", QUEUE_NAME + ":" + HOST);
         
-        factory.setHost(HOST);
         try {
+        	factory.setHost(HOST);
+        	 Log.i("HOST", factory.getHost());
 			connection = factory.newConnection();
+			 Log.i("CONN", connection.getAddress().toString());
 			 channel = connection.createChannel();
 			 channel.queueDeclare(QUEUE_NAME, false, false, false, null);
 			 consumer = new QueueingConsumer(channel);
+			 
+			 
 		} catch (IOException e) {
 			Log.i("IOEXCEPTION", "onCreate()");
 			e.printStackTrace();
@@ -143,61 +150,51 @@ public class MyService extends Service {
 
     private void onTimerTick() {
         
-    Log.i("TimerTick", "Timer doing work." + counter);
+    	try {
+    	      ConnectionFactory factory = new ConnectionFactory();
+    	      factory.setHost("192.168.1.84");
+    	  
+    	      connection = factory.newConnection();
+    	      channel = connection.createChannel();
 
-	 try {
-		
-		 channel.basicConsume(QUEUE_NAME, true, consumer);
+    	      channel.exchangeDeclare(EXCHANGE_NAME, "topic");
+    	      String queueName = channel.queueDeclare().getQueue();
+    	 
+//    	      if (argv.length < 1){
+//    	        System.err.println("Usage: ReceiveLogsTopic [binding_key]...");
+//    	        System.exit(1);
+//    	      }
+    	    
+//    	      for(String bindingKey : argv){    
+    	        channel.queueBind(queueName, EXCHANGE_NAME, "anonymous.info");
+    	     // }
+    	    
+    	      System.out.println(" [*] Waiting for messages. To exit press CTRL+C");
 
+    	      QueueingConsumer consumer = new QueueingConsumer(channel);
+    	      channel.basicConsume(queueName, true, consumer);
 
-	
-			 message="";
-			 QueueingConsumer.Delivery delivery = null;
+    	    
+    	        QueueingConsumer.Delivery delivery = consumer.nextDelivery();
+    	        String message = new String(delivery.getBody());
+    	        String routingKey = delivery.getEnvelope().getRoutingKey();
 
-			 try {
-				 Log.i("BEFORE-CONSUME", "Stops here waiting for message to arrive");
-				 delivery = consumer.nextDelivery();
-				 if(delivery!=null)
-				 {	
-					
-					 message = new String(delivery.getBody());
-					 Log.i("SERVICE", "MESSAGE ARRIVED" + message);
-					 arr.add(message);
-				 }
-			 } catch (ShutdownSignalException e) {
-				
-				 channel.close();
-				 connection.close();
-				 Log.i("MESSAGE", "A");
-				 e.printStackTrace();
-			 } catch (ConsumerCancelledException e) {
-				 channel.close();
-				 connection.close();
-				
-				 Log.i("MESSAGE", "B");
-				 e.printStackTrace();
-			 } catch (InterruptedException e) {
-				 channel.close();
-				 connection.close();
-				 
-				 Log.i("MESSAGE", "C");
-				 e.printStackTrace();
-			 }
-
-	 } catch (IOException e) {
-		 e.printStackTrace();
-	 }
-	 
-        try {
-            counter += incrementby;
-       	 for(String str2 : arr){
-    		 Log.i("STR2: ", str2);
-    		 sendMessageToUI(counter, str2);
-    		 arr.clear();
-    	 }
-        } catch (Throwable t) { //you should always ultimately catch all exceptions in timer tasks.
-            Log.e("TimerTick", "Timer Tick Failed.", t);            
-        }
+    	        try {
+    	            counter += incrementby;
+    	       
+    	    		 sendMessageToUI(counter, message + ":" + routingKey);
+    	    	
+    	        } catch (Throwable t) { //you should always ultimately catch all exceptions in timer tasks.
+    	            Log.e("TimerTick", "Timer Tick Failed.", t);            
+    	        }
+    	        
+    	    //    System.out.println(" [x] Received '" + routingKey + "':'" + message + "'");   
+    	      
+    	    }
+    	    catch  (Exception e) {
+    	      e.printStackTrace();
+    	    }
+    	    
     }
 
     @Override
