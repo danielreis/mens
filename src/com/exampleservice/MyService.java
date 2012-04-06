@@ -30,13 +30,12 @@ import com.rabbitmq.client.ShutdownSignalException;
  */
 public class MyService extends Service 
 {
-	private static final String EXCHANGE_NAME = "topic_logs"; // Exchange utilizado para publicar e subscrever mensagens
-	private String HOST = "192.168.1.84"; // IP do broker de mensagens na rede
-	private String ROUTING_KEY = "anonymous.info";
-	
+	private static String EXCHANGE_NAME = "topic_logs"; // Exchange utilizado para publicar e subscrever mensagens
+	private String HOST = "none"; // IP do broker de mensagens na rede
+	private String ROUTING_KEY = "none";
+
 	private QueueingConsumer consumer  = null; // consumer para recepcionar mensagens
-	private Connection connection; // Conexão a utilizar
-	private Channel channel; // Canal de comunicação
+
 
 	private NotificationManager nm; // Sistema de notificações
 	private Timer timer = new Timer(); // Timer 
@@ -57,6 +56,8 @@ public class MyService extends Service
 	public IBinder onBind(Intent intent) 
 	{
 		Log.i("onBind()", intent.toString());
+
+
 		return mMessenger.getBinder();
 	}
 
@@ -111,18 +112,6 @@ public class MyService extends Service
 	@Override
 	public void onCreate() {
 		super.onCreate();
-
-		Log.i("onCreate()", "STARTED!");
-		try {
-			consumer = connectRabbitMQ(HOST,EXCHANGE_NAME, ROUTING_KEY);
-			showNotification();
-			timer.scheduleAtFixedRate(new TimerTask(){ public void run() {subscribe();}}, 0, 1000);
-			isRunning = true;
-		} catch (IOException e) {
-			Log.i("CONNECT", "Connection error!");
-			e.printStackTrace();
-		}
-
 	}
 
 	private void showNotification() {
@@ -147,6 +136,23 @@ public class MyService extends Service
 	@Override
 	public int onStartCommand(Intent intent, int flags, int startId) {
 		Log.i("MyService", "Received start id " + startId + ": " + intent);
+		Bundle b = intent.getExtras();
+
+		HOST = b.getString("host");
+		ROUTING_KEY = b.getString("routing_key");
+		EXCHANGE_NAME = b.getString("exchange_name");
+		Log.i("INFO", "Connecting to " + HOST + "|Routing key: " + ROUTING_KEY + "| Exchange name: " + EXCHANGE_NAME);
+
+		try {
+			consumer = connectRabbitMQ(HOST,EXCHANGE_NAME, ROUTING_KEY);
+			showNotification();
+			timer.scheduleAtFixedRate(new TimerTask(){ public void run() {subscribe();}}, 0, 1000);
+			isRunning = true;
+
+		} catch (IOException e) {
+			Log.i("CONNECT", "Connection error!");
+			e.printStackTrace();
+		}
 		return START_STICKY; // run until explicitly stopped.
 	}
 
@@ -168,29 +174,30 @@ public class MyService extends Service
 		{
 			try 
 			{
+				Log.i("CONNECT", "Waiting for new messages...");
 				QueueingConsumer.Delivery delivery = consumer.nextDelivery();
 				String message = new String(delivery.getBody());
 				String routingKey = delivery.getEnvelope().getRoutingKey();
-
+				Log.i("MESSAGE ARRIVED", message);
 				counter += incrementby;
 				sendMessageToUI(counter, message + ":" + routingKey);
 			}
-			
+
 			catch (ShutdownSignalException e) 
 			{
 				e.printStackTrace();
-				
+
 			} catch (ConsumerCancelledException e) {
-				
+
 				e.printStackTrace();
 			} catch (InterruptedException e) {
-				
+
 				e.printStackTrace();
 			}
 		}
 		else
 		{
-			Log.i("CONNECT", "Consumer is null at subscribe()");
+			Log.i("CONNECT", "ERROR: Consumer is null at subscribe()");
 		}
 
 	}
@@ -201,6 +208,8 @@ public class MyService extends Service
 	 */
 	public QueueingConsumer connectRabbitMQ(String host, String exchange, String routing_key) throws IOException
 	{
+		Connection connection; // Conexão a utilizar
+		Channel channel; // Canal de comunicação
 		ConnectionFactory factory = new ConnectionFactory();
 		factory.setHost(host);
 
@@ -229,10 +238,6 @@ public class MyService extends Service
 		nm.cancel(R.string.service_started); // Cancel the persistent notification.
 
 		isRunning = false;
-		
-		
-		
-
 
 	}
 }
