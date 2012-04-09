@@ -1,4 +1,6 @@
-package com.exampleservice;
+package com.example.service;
+
+import com.example.service.R;
 
 import android.app.Activity;
 import android.content.ComponentName;

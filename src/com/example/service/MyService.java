@@ -1,4 +1,4 @@
-package com.exampleservice;
+package com.example.service;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -16,6 +16,8 @@ import android.os.Message;
 import android.os.Messenger;
 import android.os.RemoteException;
 import android.util.Log;
+
+import com.example.service.R;
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.Connection;
 import com.rabbitmq.client.ConnectionFactory;
@@ -25,7 +27,7 @@ import com.rabbitmq.client.ShutdownSignalException;
 
 
 /**
- * Implementação de um serviço local em android. 
+ * 
  * @author danielreis
  */
 public class MyService extends Service 
@@ -34,6 +36,7 @@ public class MyService extends Service
 	private String HOST = "none"; // IP do broker de mensagens na rede
 	private String ROUTING_KEY = "none";
 
+	private Intent intentClient = null;
 	private QueueingConsumer consumer  = null; // consumer para recepcionar mensagens
 
 
@@ -45,12 +48,13 @@ public class MyService extends Service
 	ArrayList<Messenger> mClients = new ArrayList<Messenger>(); // Mantem registo de todos os clientes que subscrevem notificações
 	int mValue = 0; // Último valor enviado pelo cliente.
 
-	static final int MSG_REGISTER_CLIENT = 1;
-	static final int MSG_UNREGISTER_CLIENT = 2;
-	static final int MSG_SET_INT_VALUE = 3;
-	static final int MSG_SET_STRING_VALUE = 4;
+	public static final int MSG_REGISTER_CLIENT = 1;
+	public static final int MSG_UNREGISTER_CLIENT = 2;
+	public static final int MSG_SET_INT_VALUE = 3;
+	public static final int MSG_SET_STRING_VALUE = 4;
 	final Messenger mMessenger = new Messenger(new IncomingHandler()); // Target we publish for clients to send messages to IncomingHandler.
 
+	
 
 	@Override
 	public IBinder onBind(Intent intent) 
@@ -90,6 +94,9 @@ public class MyService extends Service
 	 */
 	private void sendMessageToUI(int intvaluetosend, String message) 
 	{
+
+		
+		
 		for (int i=mClients.size()-1; i>=0; i--) {
 			try {
 				// Send data as an Integer
@@ -138,6 +145,8 @@ public class MyService extends Service
 		Log.i("MyService", "Received start id " + startId + ": " + intent);
 		Bundle b = intent.getExtras();
 
+	
+		
 		HOST = b.getString("host");
 		ROUTING_KEY = b.getString("routing_key");
 		EXCHANGE_NAME = b.getString("exchange_name");
