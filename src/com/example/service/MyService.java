@@ -16,6 +16,7 @@ import android.os.Message;
 import android.os.Messenger;
 import android.os.RemoteException;
 import android.util.Log;
+import android.widget.Toast;
 
 import com.example.service.R;
 import com.rabbitmq.client.Channel;
@@ -32,12 +33,12 @@ import com.rabbitmq.client.ShutdownSignalException;
  */
 public class MyService extends Service 
 {
-	private static String EXCHANGE_NAME = "topic_logs"; // Exchange utilizado para publicar e subscrever mensagens
-	private String HOST = "none"; // IP do broker de mensagens na rede
-	private String ROUTING_KEY = "none";
+//	private static String EXCHANGE_NAME = "topic_logs"; // Exchange utilizado para publicar e subscrever mensagens
+//	private String HOST = "none"; // IP do broker de mensagens na rede
+//	private String ROUTING_KEY = "none";
 
-	private Intent intentClient = null;
-	private QueueingConsumer consumer  = null; // consumer para recepcionar mensagens
+
+//	private QueueingConsumer consumer  = null; // consumer para recepcionar mensagens
 
 
 	private NotificationManager nm; // Sistema de notifica›es
@@ -52,6 +53,7 @@ public class MyService extends Service
 	public static final int MSG_UNREGISTER_CLIENT = 2;
 	public static final int MSG_SET_INT_VALUE = 3;
 	public static final int MSG_SET_STRING_VALUE = 4;
+	public static final int MSG_CONNECT = 5;
 	final Messenger mMessenger = new Messenger(new IncomingHandler()); // Target we publish for clients to send messages to IncomingHandler.
 
 	
@@ -78,9 +80,53 @@ public class MyService extends Service
 			case MSG_UNREGISTER_CLIENT:
 				mClients.remove(msg.replyTo);
 				break;
-			case MSG_SET_INT_VALUE:
-				incrementby = msg.arg1;
+			case MSG_CONNECT:
+		//		Log.i("INFO", "Connecting to " + HOST + "|Exchange name: " + EXCHANGE_NAME);
+				Log.i("MSG from client", "MSG_CONNECT");
+				try {
+					String h = msg.getData().get("host").toString();
+					String r = msg.getData().get("routing_key").toString();
+					String q = msg.getData().get("queue_name").toString();
+					
+					Log.i("INFO", "HOST" + h + "|Exchange: " + q);
+					
+					final QueueingConsumer consumer = connectRabbitMQ(h,q,r);
+					Log.i("INFO", consumer.getConsumerTag());
+					Log.i("INFO", consumer.toString());
+					Log.i("INFO", consumer.getChannel().toString());
+				
+					timer=new Timer();
+					timer.scheduleAtFixedRate(new TimerTask(){ public void run() {subscribe(consumer);}}, 0, 1000);
+					isRunning = true;
+
+				} catch (IOException e) {
+					Log.i("CONNECT", "Connection error!");
+					e.printStackTrace();
+				}
+
 				break;
+//			case MSG_SET_INT_VALUE:
+//				//incrementby = msg.arg1;
+//				EXCHANGE_NAME = "ola";
+//				
+//
+//				Log.i("INFO", "Connecting to " + HOST + "|Exchange name: " + EXCHANGE_NAME);
+//				
+//				try {
+//					consumer = connectRabbitMQ(HOST,EXCHANGE_NAME, ROUTING_KEY);
+//					showNotification();
+//					timer.scheduleAtFixedRate(new TimerTask(){ public void run() {subscribe();}}, 0, 1000);
+//					isRunning = true;
+//
+//				} catch (IOException e) {
+//					Log.i("CONNECT", "Connection error!");
+//					e.printStackTrace();
+//				}
+//				break;
+//			case MSG_SET_STRING_VALUE:
+//				  String str1 = msg.getData().getString("str1");
+//				  Log.i("QUEUE_INFO", str1);
+//				  break;
 			default:
 				super.handleMessage(msg);
 			}
@@ -94,14 +140,11 @@ public class MyService extends Service
 	 */
 	private void sendMessageToUI(int intvaluetosend, String message) 
 	{
-
-		
-		
 		for (int i=mClients.size()-1; i>=0; i--) {
 			try {
 				// Send data as an Integer
 				mClients.get(i).send(Message.obtain(null, MSG_SET_INT_VALUE, intvaluetosend, 0));
-
+				
 				//Send data as a String
 				Bundle b = new Bundle();
 				b.putString("str1", message);
@@ -121,10 +164,10 @@ public class MyService extends Service
 		super.onCreate();
 	}
 
-	private void showNotification() {
+	private void showNotification(String text) {
 		nm = (NotificationManager)getSystemService(NOTIFICATION_SERVICE);
 		// In this sample, we'll use the same text for the ticker and the expanded notification
-		CharSequence text = getText(R.string.service_started);
+		
 		// Set the icon, scrolling text and timestamp
 		Notification notification = new Notification(R.drawable.ic_launcher, text, System.currentTimeMillis());
 		// The PendingIntent to launch our activity if the user selects this notification
@@ -143,25 +186,8 @@ public class MyService extends Service
 	@Override
 	public int onStartCommand(Intent intent, int flags, int startId) {
 		Log.i("MyService", "Received start id " + startId + ": " + intent);
-		Bundle b = intent.getExtras();
 
-	
-		
-		HOST = b.getString("host");
-		ROUTING_KEY = b.getString("routing_key");
-		EXCHANGE_NAME = b.getString("exchange_name");
-		Log.i("INFO", "Connecting to " + HOST + "|Routing key: " + ROUTING_KEY + "| Exchange name: " + EXCHANGE_NAME);
-
-		try {
-			consumer = connectRabbitMQ(HOST,EXCHANGE_NAME, ROUTING_KEY);
-			showNotification();
-			timer.scheduleAtFixedRate(new TimerTask(){ public void run() {subscribe();}}, 0, 1000);
-			isRunning = true;
-
-		} catch (IOException e) {
-			Log.i("CONNECT", "Connection error!");
-			e.printStackTrace();
-		}
+		showNotification("Service started");
 		return START_STICKY; // run until explicitly stopped.
 	}
 
@@ -177,19 +203,23 @@ public class MyService extends Service
 	/**
 	 * Task that service performs
 	 */
-	private void subscribe() 
+	private void subscribe(QueueingConsumer consumer) 
 	{
+		
 		if(consumer!=null)
 		{
+			Log.i("CONNECT", "CONSUMER not null");
 			try 
 			{
-				Log.i("CONNECT", "Waiting for new messages...");
+				Log.i("CONNECT", "Waiting for new messages from consumer" + consumer.getChannel());
 				QueueingConsumer.Delivery delivery = consumer.nextDelivery();
+				Log.i("CONNECT", "MESSAGE ARRIVED");
 				String message = new String(delivery.getBody());
 				String routingKey = delivery.getEnvelope().getRoutingKey();
+				String exch_name = delivery.getEnvelope().getExchange();
 				Log.i("MESSAGE ARRIVED", message);
 				counter += incrementby;
-				sendMessageToUI(counter, message + ":" + routingKey);
+				sendMessageToUI(counter, message + ":" + exch_name);
 			}
 
 			catch (ShutdownSignalException e) 
@@ -222,17 +252,20 @@ public class MyService extends Service
 		ConnectionFactory factory = new ConnectionFactory();
 		factory.setHost(host);
 
+		Log.i("CONNECTION", "SET HOST OK");
 		connection = factory.newConnection();
 		channel = connection.createChannel();
-
+		Log.i("CONNECTION", "CHANNEL OK");
 		channel.exchangeDeclare(exchange, "topic");
 		String queueName = channel.queueDeclare().getQueue();
-
+		Log.i("CONNECTION", "QUEUE_NAME: " + queueName);
+		
 		channel.queueBind(queueName, exchange, routing_key);
-
-		consumer = new QueueingConsumer(channel);
+		QueueingConsumer consumer = new QueueingConsumer(channel);
 		channel.basicConsume(queueName, true, consumer);
-
+		
+		Log.i("CONNECTION", "CONSUMER: " + consumer.toString());
+		
 		return consumer;
 	}
 

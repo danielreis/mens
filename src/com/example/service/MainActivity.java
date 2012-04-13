@@ -18,10 +18,11 @@ import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.Button;
 import android.widget.TextView;
+import android.widget.Toast;
 
 public class MainActivity extends Activity {
-    Button btnStart, btnStop, btnBind, btnUnbind, btnUpby1, btnUpby10;
-    TextView textStatus, textIntValue, textStrValue;
+    Button btnStart, btnStop, btnUpby1, btnUpby10;
+    TextView textStatus, textIntValue, textMessages;
     Messenger mService = null;
     boolean mIsBound;
     final Messenger mMessenger = new Messenger(new IncomingHandler());
@@ -31,11 +32,11 @@ public class MainActivity extends Activity {
         public void handleMessage(Message msg) {
             switch (msg.what) {
             case MyService.MSG_SET_INT_VALUE:
-                textIntValue.setText("Int Message: " + msg.arg1);
+                textIntValue.setText("Counter: " + msg.arg1);
                 break;
             case MyService.MSG_SET_STRING_VALUE:
                 String str1 = msg.getData().getString("str1");
-                textStrValue.setText("Str Message: " + str1);
+                textMessages.append("\n" + str1);
                 break;
             default:
                 super.handleMessage(msg);
@@ -51,12 +52,12 @@ public class MainActivity extends Activity {
                 msg.replyTo = mMessenger;
                 mService.send(msg);
             } catch (RemoteException e) {
-                // In this case the service has crashed before we could even do anything with it
+               
             }
         }
 
-        public void onServiceDisconnected(ComponentName className) {
-            // This is called when the connection with the service has been unexpectedly disconnected - process crashed.
+        public void onServiceDisconnected(ComponentName className) 
+        {
             mService = null;
             textStatus.setText("Disconnected.");
         }
@@ -68,24 +69,23 @@ public class MainActivity extends Activity {
         setContentView(R.layout.main);
         btnStart = (Button)findViewById(R.id.btnStart);
         btnStop = (Button)findViewById(R.id.btnStop);
-        btnBind = (Button)findViewById(R.id.btnBind);
-        btnUnbind = (Button)findViewById(R.id.btnUnbind);
+   
         textStatus = (TextView)findViewById(R.id.textStatus);
         textIntValue = (TextView)findViewById(R.id.textIntValue);
-        textStrValue = (TextView)findViewById(R.id.textStrValue);
+       
         btnUpby1 = (Button)findViewById(R.id.btnUpby1);
         btnUpby10 = (Button)findViewById(R.id.btnUpby10);
 
         btnStart.setOnClickListener(btnStartListener);
         btnStop.setOnClickListener(btnStopListener);
-        btnBind.setOnClickListener(btnBindListener);
-        btnUnbind.setOnClickListener(btnUnbindListener);
+      
+      
         btnUpby1.setOnClickListener(btnUpby1Listener);
         btnUpby10.setOnClickListener(btnUpby10Listener);
 
+        textMessages = (TextView)findViewById(R.id.textViewMessages);
     
-        btnBind.setVisibility(View.INVISIBLE);
-        btnUnbind.setVisibility(View.INVISIBLE);
+     
         
         restoreMe(savedInstanceState);
 
@@ -97,17 +97,17 @@ public class MainActivity extends Activity {
         super.onSaveInstanceState(outState);
         outState.putString("textStatus", textStatus.getText().toString());
         outState.putString("textIntValue", textIntValue.getText().toString());
-        outState.putString("textStrValue", textStrValue.getText().toString());
+       
     }
     private void restoreMe(Bundle state) {
         if (state!=null) {
             textStatus.setText(state.getString("textStatus"));
             textIntValue.setText(state.getString("textIntValue"));
-            textStrValue.setText(state.getString("textStrValue"));
+         
         }
     }
-    private void CheckIfServiceIsRunning() {
-        //If the service is running when the activity starts, we want to automatically bind to it.
+    private void CheckIfServiceIsRunning() 
+    {
         if (MyService.isRunning()) {
             doBindService();
         }
@@ -115,64 +115,93 @@ public class MainActivity extends Activity {
 
     private OnClickListener btnStartListener = new OnClickListener() {
         public void onClick(View v){
-        	 Bundle b = new Bundle();
-             b.putString("host", "192.168.1.84");
-             b.putString("routing_key", "anonymous.info");
-             b.putString("exchange_name", "topic_logs");
+//        	 Bundle b = new Bundle();
+//             b.putString("host", "192.168.1.84");
+//             b.putString("routing_key", "anonymous.info");
+//             b.putString("exchange_name", "topic_logs");
              Intent i = new Intent(MainActivity.this, MyService.class);
-             i.putExtras(b);
+//            i.putExtras(b);
 
              startService(i);
         
             doBindService();
         }
     };
-    private OnClickListener btnStopListener = new OnClickListener() {
+    private OnClickListener btnStopListener = new OnClickListener() 
+    {
         public void onClick(View v){
             doUnbindService();
             stopService(new Intent(MainActivity.this, MyService.class));
         }
     };
-    private OnClickListener btnBindListener = new OnClickListener() {
+  
+    private OnClickListener btnUpby1Listener = new OnClickListener() 
+    {
         public void onClick(View v){
-            doBindService();
+        	sendConnectInfo("192.168.1.84", "anonymous.info", "topic_logs");
+        	Toast.makeText(v.getContext(), "Listen to topic_logs", Toast.LENGTH_LONG).show();
         }
     };
-    private OnClickListener btnUnbindListener = new OnClickListener() {
-        public void onClick(View v){
-            doUnbindService();
+    private OnClickListener btnUpby10Listener = new OnClickListener() 
+    {
+    	public void onClick(View v){
+        	sendConnectInfo("192.168.1.84", "anonymous.info", "another_queue");
+        	Toast.makeText(v.getContext(), "Listen to another_queue", Toast.LENGTH_LONG).show();
         }
     };
-    private OnClickListener btnUpby1Listener = new OnClickListener() {
-        public void onClick(View v){
-            sendMessageToService(1);
-        }
-    };
-    private OnClickListener btnUpby10Listener = new OnClickListener() {
-        public void onClick(View v){
-            sendMessageToService(10);
-        }
-    };
-    private void sendMessageToService(int intvaluetosend) {
+    
+    
+//    private void sendMessageToService(int intvaluetosend, String message) 
+//    {
+//        if (mIsBound) {
+//            if (mService != null) {
+//                try {
+//                    Message msg = Message.obtain(null, MyService.MSG_SET_INT_VALUE, intvaluetosend, 0);
+//                    msg.replyTo = mMessenger;
+//                    mService.send(msg);
+//                    
+//                    Bundle b = new Bundle();
+//    				b.putString("str1", message);
+//    				Message msg1 = Message.obtain(null, MyService.MSG_SET_STRING_VALUE);
+//    				msg1.setData(b);
+//    				 msg1.replyTo = mMessenger;
+//                     mService.send(msg1);
+//                } catch (RemoteException e) {
+//                }
+//            }
+//        }
+//    }
+    
+    private void sendConnectInfo(String host, String routing_key, String queue_name) 
+    {
         if (mIsBound) {
             if (mService != null) {
                 try {
-                    Message msg = Message.obtain(null, MyService.MSG_SET_INT_VALUE, intvaluetosend, 0);
-                    msg.replyTo = mMessenger;
+                    
+                    Bundle b = new Bundle();
+    				b.putString("host", host);
+    				b.putString("routing_key", routing_key);
+    				b.putString("queue_name", queue_name);
+    				Message msg = Message.obtain(null, MyService.MSG_CONNECT);
+    				msg.setData(b);
+    				msg.replyTo = mMessenger;
                     mService.send(msg);
                 } catch (RemoteException e) {
+                	Log.i("ERROR", "SendConnectInfo()");
                 }
             }
         }
     }
 
 
-    void doBindService() {
-        bindService(new Intent(this, MyService.class), mConnection, Context.BIND_AUTO_CREATE);
-        mIsBound = true;
-        textStatus.setText("Binding.");
+    void doBindService() 
+    {
+    	mIsBound = bindService(new Intent(this, MyService.class), mConnection, Context.BIND_AUTO_CREATE);
+       
+        textStatus.setText("Binding:" + mIsBound);
     }
-    void doUnbindService() {
+    void doUnbindService() 
+    {
         if (mIsBound) {
             // If we have received the service, and hence registered with it, then now is the time to unregister.
             if (mService != null) {
@@ -192,12 +221,13 @@ public class MainActivity extends Activity {
     }
 
     @Override
-    protected void onDestroy() {
+    protected void onDestroy() 
+    {
         super.onDestroy();
         try {
             doUnbindService();
         } catch (Throwable t) {
-            Log.e("MainActivity", "Failed to unbind from the service", t);
+            Log.i("MainActivity", "Failed to unbind from the service", t);
         }
     }
 }
