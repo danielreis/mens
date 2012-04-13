@@ -9,10 +9,12 @@
      <uses-sdk android:minSdkVersion="7" android:targetSdkVersion="8" />
      
      
-    <application android:icon="@drawable/ic_launcher" android:label="@string/app_name">
+    <application android:icon="@drawable/ic_launcher" android:label="@string/app_name" >
+        
         <activity android:name="com.example.service.MainActivity"
                   android:label="@string/app_name" 
-                  android:launchMode="singleInstance">
+                  android:launchMode="singleInstance"
+                  android:screenOrientation="portrait">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
@@ -21,8 +23,7 @@
 
    
    
-    <service android:enabled="true" android:name="com.example.service.MyService" 
-        android:exported="true">
+    <service android:enabled="true" android:name="com.example.service.MyService" android:exported="true">
           
         </service>
     </application>
