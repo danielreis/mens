@@ -21,10 +21,11 @@ public final class R {
         public static final int btnStop=0x7f050002;
         public static final int btnUpby1=0x7f050007;
         public static final int btnUpby10=0x7f050008;
-        public static final int scrollV=0x7f050009;
+        public static final int listenQueueBtn=0x7f050009;
+        public static final int scrollV=0x7f05000a;
         public static final int textIntValue=0x7f050005;
         public static final int textStatus=0x7f050004;
-        public static final int textViewMessages=0x7f05000a;
+        public static final int textViewMessages=0x7f05000b;
     }
     public static final class layout {
         public static final int main=0x7f030000;

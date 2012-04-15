@@ -20,8 +20,9 @@ import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
-public class MainActivity extends Activity {
-    Button btnStart, btnStop, btnUpby1, btnUpby10;
+public class MainActivity extends Activity 
+{
+    Button btnStart, btnStop, btnUpby1, btnUpby10, listenQueueBtn;
     TextView textStatus, textIntValue, textMessages;
     Messenger mService = null;
     boolean mIsBound;
@@ -75,10 +76,11 @@ public class MainActivity extends Activity {
        
         btnUpby1 = (Button)findViewById(R.id.btnUpby1);
         btnUpby10 = (Button)findViewById(R.id.btnUpby10);
+        listenQueueBtn = (Button)findViewById(R.id.listenQueueBtn);
 
         btnStart.setOnClickListener(btnStartListener);
         btnStop.setOnClickListener(btnStopListener);
-      
+        listenQueueBtn.setOnClickListener(btnListenQueueListener);
       
         btnUpby1.setOnClickListener(btnUpby1Listener);
         btnUpby10.setOnClickListener(btnUpby10Listener);
@@ -115,12 +117,8 @@ public class MainActivity extends Activity {
 
     private OnClickListener btnStartListener = new OnClickListener() {
         public void onClick(View v){
-//        	 Bundle b = new Bundle();
-//             b.putString("host", "192.168.1.84");
-//             b.putString("routing_key", "anonymous.info");
-//             b.putString("exchange_name", "topic_logs");
+
              Intent i = new Intent(MainActivity.this, MyService.class);
-//            i.putExtras(b);
 
              startService(i);
         
@@ -132,6 +130,13 @@ public class MainActivity extends Activity {
         public void onClick(View v){
             doUnbindService();
             stopService(new Intent(MainActivity.this, MyService.class));
+        }
+    };
+    private OnClickListener btnListenQueueListener = new OnClickListener() 
+    {
+        public void onClick(View v){
+        	sendConnectInfo2("192.168.1.84", "android");
+        	Toast.makeText(v.getContext(), "Listen android", Toast.LENGTH_LONG).show();
         }
     };
   
@@ -150,27 +155,25 @@ public class MainActivity extends Activity {
         }
     };
     
-    
-//    private void sendMessageToService(int intvaluetosend, String message) 
-//    {
-//        if (mIsBound) {
-//            if (mService != null) {
-//                try {
-//                    Message msg = Message.obtain(null, MyService.MSG_SET_INT_VALUE, intvaluetosend, 0);
-//                    msg.replyTo = mMessenger;
-//                    mService.send(msg);
-//                    
-//                    Bundle b = new Bundle();
-//    				b.putString("str1", message);
-//    				Message msg1 = Message.obtain(null, MyService.MSG_SET_STRING_VALUE);
-//    				msg1.setData(b);
-//    				 msg1.replyTo = mMessenger;
-//                     mService.send(msg1);
-//                } catch (RemoteException e) {
-//                }
-//            }
-//        }
-//    }
+    private void sendConnectInfo2(String host,String queue_name) 
+    {
+        if (mIsBound) {
+            if (mService != null) {
+                try {
+                    
+                    Bundle b = new Bundle();
+    				b.putString("host", host);
+    				b.putString("queue_name", queue_name);
+    				Message msg = Message.obtain(null, MyService.MSG_CONNECT_QUEUE);
+    				msg.setData(b);
+    				msg.replyTo = mMessenger;
+                    mService.send(msg);
+                } catch (RemoteException e) {
+                	Log.i("ERROR", "SendConnectInfo()");
+                }
+            }
+        }
+    }
     
     private void sendConnectInfo(String host, String routing_key, String queue_name) 
     {
@@ -192,7 +195,6 @@ public class MainActivity extends Activity {
             }
         }
     }
-
 
     void doBindService() 
     {

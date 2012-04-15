@@ -64,6 +64,15 @@
             android:layout_alignParentRight="true"
             android:text="Listen hr_queue" >
         </Button>
+
+        <Button
+            android:id="@+id/listenQueueBtn"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentTop="true"
+            android:layout_toLeftOf="@+id/btnUpby10"
+            android:text="queue" />
+
     </RelativeLayout>
 
     <ScrollView
