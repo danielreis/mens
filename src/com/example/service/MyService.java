@@ -7,10 +7,12 @@ import java.util.Calendar;
 import java.util.Timer;
 import java.util.TimerTask;
 
+import android.app.AlertDialog;
 import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
@@ -19,7 +21,9 @@ import android.os.Message;
 import android.os.Messenger;
 import android.os.RemoteException;
 import android.util.Log;
+import android.widget.Toast;
 
+import com.example.service.RestClient.RequestMethod;
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.Connection;
 import com.rabbitmq.client.ConnectionFactory;
@@ -89,6 +93,12 @@ public class MyService extends Service
 
 				break;
 			case MSG_CONNECT_QUEUE:
+				
+				PutUserToServer("vero", "Pr", "30", "4");
+				
+				// PostUserToServer("Veronica", "Prates");
+				
+				// sendMessageToUI(1, GetUsersFromServer());
 				
 				try {
 					String h = msg.getData().get("host").toString();
@@ -171,6 +181,8 @@ public class MyService extends Service
 	@Override
 	public int onStartCommand(Intent intent, int flags, int startId) {
 		Log.i("MyService", "Received start id " + startId + ": " + intent);
+		
+	
 
 		showNotification("Service started");
 		return START_STICKY; // run until explicitly stopped.
@@ -293,4 +305,107 @@ public class MyService extends Service
 		isRunning = false;
 
 	}
+	
+	/**
+	 * REST PUT FUNCTION
+	 */
+	public void PutUserToServer(String first_name, String last_name, String age, String user_id)
+	{
+		String host = "http://192.168.1.84:3000/users/" + user_id; 
+		RestClient client = new RestClient(host);
+		
+		client.AddParam("user[first_name]", first_name);
+		client.AddParam("user[last_name]", last_name);
+		client.AddParam("user[age]", age);
+		
+		
+	
+
+		try 
+		{
+			client.Execute(RequestMethod.PUT);
+			Toast.makeText(getApplicationContext(), "Dados submetidos com sucesso! ", Toast.LENGTH_LONG).show();
+		} 
+		catch (Exception e) 
+		{
+			Toast.makeText(getApplicationContext(), "Erro: " + e.getMessage(), Toast.LENGTH_LONG).show();
+			e.printStackTrace();
+		}
+
+		
+		if(client.getResponseCode() == 200)
+			Log.i("INFO", "Operação concluída com sucesso!");
+		else
+			Log.i("INFO", "Operação falhou!");
+	}
+	
+	
+	
+	/**
+	 * REST POST FUNCTION
+	 */
+	public void PostUserToServer(String first_name, String last_name)
+	{
+		RestClient client = new RestClient("http://192.168.1.84:3000/users");
+		
+		client.AddParam("user[first_name]", first_name);
+		client.AddParam("user[last_name]", last_name);
+		
+	
+
+		try 
+		{
+			client.Execute(RequestMethod.POST);
+			Toast.makeText(getApplicationContext(), "Dados submetidos com sucesso! ", Toast.LENGTH_LONG).show();
+		} 
+		catch (Exception e) 
+		{
+			Toast.makeText(getApplicationContext(), "Erro: " + e.getMessage(), Toast.LENGTH_LONG).show();
+			e.printStackTrace();
+		}
+
+		
+		if(client.getResponseCode() == 200)
+			Log.i("INFO", "Operação concluída com sucesso!");
+		else
+			Log.i("INFO", "Operação falhou!");
+	}
+	
+	/**
+	 * REST POST FUNCTION
+	 */
+	public String GetUsersFromServer()
+	{
+		String rsp  = "";
+		RestClient client = new RestClient("http://192.168.1.84:3000/users");
+		
+		client.AddHeader("Accept", "application/json");
+	
+
+		try 
+		{
+			client.Execute(RequestMethod.GET);
+			rsp = client.getResponse();
+			Toast.makeText(getApplicationContext(), rsp, Toast.LENGTH_SHORT).show();
+			
+		} 
+		catch (Exception e) 
+		{
+			Toast.makeText(getApplicationContext(), "Erro: " + e.getMessage(), Toast.LENGTH_LONG).show();
+			e.printStackTrace();
+		}
+
+		
+		
+		if(client.getResponseCode() == 200)
+			Log.i("INFO", "Operação concluída com sucesso!");
+		else
+			Log.i("INFO", "Operação falhou!");
+		
+		return rsp;
+	}
+	
+	
+	
+	
 }
