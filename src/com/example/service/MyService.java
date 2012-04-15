@@ -201,6 +201,7 @@ public class MyService extends Service
 //				String routingKey = delivery.getEnvelope().getRoutingKey();
 				String exch_name = delivery.getEnvelope().getExchange();
 				String queue_name = delivery.getEnvelope().getRoutingKey();
+				
 //				Log.i("MESSAGE ARRIVED", message);
 				showNotification(message);
 				counter += incrementby;
