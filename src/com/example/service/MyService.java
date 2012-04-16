@@ -84,7 +84,7 @@ public class MyService extends Service
 					timer=new Timer();
 					timer.scheduleAtFixedRate(new TimerTask(){ public void run() {subscribe(consumer);}}, 0, 1000);
 					isRunning = true;
-					showNotification("Running");
+//					showNotification("Running");
 
 				} catch (IOException e) {
 					Log.i("CONNECT", "Connection error!");
@@ -109,7 +109,7 @@ public class MyService extends Service
 					timer=new Timer();
 					timer.scheduleAtFixedRate(new TimerTask(){ public void run() {subscribe(consumer);}}, 0, 1000);
 					isRunning = true;
-					showNotification("Running");
+//					showNotification("Running");
 
 				} catch (IOException e) {
 					Log.i("CONNECT", "Connection error!");
@@ -184,7 +184,7 @@ public class MyService extends Service
 		
 	
 
-		showNotification("Service started");
+	//	showNotification("Service started");
 		return START_STICKY; // run until explicitly stopped.
 	}
 
@@ -214,8 +214,8 @@ public class MyService extends Service
 				String exch_name = delivery.getEnvelope().getExchange();
 				String queue_name = delivery.getEnvelope().getRoutingKey();
 				
-//				Log.i("MESSAGE ARRIVED", message);
-				showNotification(message);
+				Log.i("MESSAGE ARRIVED", message);
+				showNotification("new message!");
 				counter += incrementby;
 				sendMessageToUI(counter, message + ":" + exch_name + ":" + queue_name);
 			}
@@ -253,19 +253,19 @@ public class MyService extends Service
 		ConnectionFactory factory = new ConnectionFactory();
 		factory.setHost(host);
 
-//		Log.i("CONNECTION", "SET HOST OK");
+		Log.i("CONNECTION", "SET HOST OK");
 		connection = factory.newConnection();
 		channel = connection.createChannel();
-//		Log.i("CONNECTION", "CHANNEL OK");
+		Log.i("CONNECTION", "CHANNEL OK");
 		channel.exchangeDeclare(exchange, "topic");
 		String queueName = channel.queueDeclare().getQueue();
-//		Log.i("CONNECTION", "QUEUE_NAME: " + queueName);
+		Log.i("CONNECTION", "QUEUE_NAME: " + queueName);
 		
 		channel.queueBind(queueName, exchange, routing_key);
 		QueueingConsumer consumer = new QueueingConsumer(channel);
 		channel.basicConsume(queueName, true, consumer);
 		
-//		Log.i("CONNECTION", "CONSUMER: " + consumer.toString());
+		Log.i("CONNECTION", "CONSUMER: " + consumer.toString());
 		
 		return consumer;
 	}

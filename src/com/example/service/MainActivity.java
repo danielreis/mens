@@ -100,6 +100,7 @@ public class MainActivity extends Activity
     }
     private void restoreMe(Bundle state) {
         if (state!=null) {
+        	
 //            textStatus.setText(state.getString("textStatus"));
 //            textIntValue.setText(state.getString("textIntValue"));
          
@@ -136,8 +137,8 @@ public class MainActivity extends Activity
     private OnClickListener btnlistenQueue2Listener = new OnClickListener() 
     {
         public void onClick(View v){
-        	sendConnectInfo2("192.168.1.84", "android2");
-        	Toast.makeText(v.getContext(), "Listen android2", Toast.LENGTH_LONG).show();
+//        	sendConnectInfo("192.168.1.84", "anonymous.info", "topic_logs");
+//        	Toast.makeText(v.getContext(), "Listen topic: topic_logs", Toast.LENGTH_LONG).show();
         }
     };
     private OnClickListener btnTopicBtnListener = new OnClickListener() 
