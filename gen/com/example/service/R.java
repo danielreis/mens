@@ -14,7 +14,10 @@ public final class R {
         public static final int ic_launcher=0x7f020000;
     }
     public static final class id {
+        public static final int PostUserBtn=0x7f050008;
+        public static final int PutUserBtn=0x7f050009;
         public static final int RelativeLayout01=0x7f050000;
+        public static final int getUsersBtn=0x7f050007;
         public static final int listenQueueBtn=0x7f050004;
         public static final int listenQueueBtn2=0x7f050003;
         public static final int scrollView1=0x7f050005;

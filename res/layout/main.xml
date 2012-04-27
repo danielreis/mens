@@ -45,8 +45,7 @@
         android:layout_height="wrap_content"
         android:layout_alignParentBottom="true"
         android:layout_alignParentLeft="true"
-        android:layout_alignParentRight="true"
-        android:layout_below="@+id/serviceToggleButton" >
+        android:layout_alignParentRight="true" >
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -54,11 +53,40 @@
 
             <TextView
                 android:id="@+id/textViewMessages"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
+                android:layout_width="match_parent"
+                android:layout_height="396dp"
                 android:text="List incoming messages" />
 
         </LinearLayout>
     </ScrollView>
+
+    <Button
+        android:id="@+id/getUsersBtn"
+        style="?android:attr/buttonStyleSmall"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentLeft="true"
+        android:layout_below="@+id/serviceToggleButton"
+        android:text="Get Users" />
+
+    <Button
+        android:id="@+id/PostUserBtn"
+        style="?android:attr/buttonStyleSmall"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignBottom="@+id/getUsersBtn"
+        android:layout_toRightOf="@+id/getUsersBtn"
+        android:text="Post User" />
+
+    <Button
+        android:id="@+id/PutUserBtn"
+        style="?android:attr/buttonStyleSmall"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignBottom="@+id/PostUserBtn"
+        android:layout_toRightOf="@+id/PostUserBtn"
+        android:text="Put User" />
+    
+   
 
 </RelativeLayout>
