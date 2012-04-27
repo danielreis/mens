@@ -69,8 +69,6 @@ import android.os.RemoteException;
 import android.util.Log;
 import android.widget.Toast;
 
-
-
 import com.example.service.RestClient.RequestMethod;
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.Connection;
@@ -97,6 +95,16 @@ public class MyService extends Service
 
 	ArrayList<Messenger> mClients = new ArrayList<Messenger>();
 	int mValue = 0;
+	
+	class current_subs
+	{
+		Timer t=null;
+		String exch= null, rk = null;
+		
+		
+	}
+	
+	ArrayList<current_subs> mySubs = new ArrayList<MyService.current_subs>(); 
 
 	public static final int MSG_REGISTER_CLIENT = 1;
 	public static final int MSG_UNREGISTER_CLIENT = 2;
@@ -109,6 +117,8 @@ public class MyService extends Service
 	public static final int MSG_GET_USER_REQUEST = 9;
 
 	public static final int	MSG_GET_SENSOR_REQUEST = 10;
+	public static final int MSG_MYSUBS = 15;
+	public static final int MSG_CANCEL_SUBS = 20;
 
 	
 	
@@ -180,16 +190,65 @@ public class MyService extends Service
 
 					
 					timer=new Timer();
-					timer.scheduleAtFixedRate(new TimerTask(){ public void run() {subscribe(consumer);}}, 0, 1000);
-					isRunning = true;
-					showNotification("Subscribe Request");
 					
+					timer.scheduleAtFixedRate(new TimerTask(){ public void run() {subscribe(consumer);}}, 0, 1000);
+					current_subs sub = new current_subs();
+					sub.t=timer;
+					sub.rk=r;
+					sub.exch=e;
+					mySubs.add(sub);
+					
+					isRunning = true;
+					showNotification("Subscribe to" + timer.toString() + ":" + r);
 
 				} catch (IOException e) {
 					Log.i("CONNECT", "Connection error!");
 					e.printStackTrace();
 				}
 
+				break;
+				
+			case MSG_MYSUBS:
+				
+				ArrayList<String> a = new ArrayList<String>();
+				if(mySubs.size()!=0)
+				{
+					for (int i = 0 ; i< mySubs.size(); i++)
+					{
+						String line = i + ":" + mySubs.get(i).exch + ":" + mySubs.get(i).rk + ":"
+								+ mySubs.get(i).t.toString();
+						Log.i("SUBS", line );
+						a.add(line);
+						
+						
+					}
+					
+					
+					
+				//mySubs.get(0).t.cancel();
+				
+				}
+				
+				
+				//Send data as a String
+				Bundle b1 = new Bundle();
+				b1.putStringArrayList("manage", a);
+				notifyGetUsersRsp(b1, MSG_MYSUBS);
+				
+				
+					
+				break;
+			case MSG_CANCEL_SUBS:
+				int cancel_arr_pos = msg.getData().getInt("pos");
+				
+				mySubs.get(cancel_arr_pos).t.cancel();
+				mySubs.remove(cancel_arr_pos);
+				
+				
+				
+				
+				
+				
 				break;
 //			case MSG_CONNECT_QUEUE:
 //				
@@ -327,7 +386,7 @@ public class MyService extends Service
 	 */
 	private void subscribe(QueueingConsumer consumer) 
 	{
-		Log.i("SUBSCRIBE", "ola");
+		
 		if(consumer!=null)
 		{
 			try 
@@ -336,14 +395,16 @@ public class MyService extends Service
 				QueueingConsumer.Delivery delivery = consumer.nextDelivery();
 				Log.i("CONNECT", "MESSAGE ARRIVED");
 				String message = new String(delivery.getBody());
-//				String routingKey = delivery.getEnvelope().getRoutingKey();
+				String routingKey = delivery.getEnvelope().getRoutingKey();
 				String exch_name = delivery.getEnvelope().getExchange();
-				String queue_name = delivery.getEnvelope().getRoutingKey();
+				
 				
 				Log.i("MESSAGE ARRIVED", message);
 				showNotification("new message: " + message );
 				Bundle b = new Bundle();
 				b.putString("MSG", message);
+				b.putString("EXCH", exch_name);
+				b.putString("RK", routingKey);
 				notifyGetUsersRsp( b, MSG_CONNECT); 
 			}
 
@@ -397,6 +458,8 @@ public class MyService extends Service
 		
 		return consumer;
 	}
+	
+	
 	
 	/** 
 	 * Send message to User Interface
