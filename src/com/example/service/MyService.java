@@ -100,6 +100,7 @@ public class MyService extends Service
 	{
 		Timer t=null;
 		String exch= null, rk = null;
+		QueueingConsumer c;
 		
 		
 	}
@@ -187,15 +188,17 @@ public class MyService extends Service
 
 					Log.i("CONNECT:", h +":"+ r +":"+e+":"+ p);
 					final QueueingConsumer consumer = connectRabbitMQ(h,p, e,r);
+					current_subs sub = new current_subs();
 
 					
 					timer=new Timer();
 					
 					timer.scheduleAtFixedRate(new TimerTask(){ public void run() {subscribe(consumer);}}, 0, 1000);
-					current_subs sub = new current_subs();
+					
 					sub.t=timer;
 					sub.rk=r;
 					sub.exch=e;
+					sub.c=consumer;
 					mySubs.add(sub);
 					
 					isRunning = true;
@@ -241,8 +244,27 @@ public class MyService extends Service
 			case MSG_CANCEL_SUBS:
 				int cancel_arr_pos = msg.getData().getInt("pos");
 				
-				mySubs.get(cancel_arr_pos).t.cancel();
-				mySubs.remove(cancel_arr_pos);
+				try {
+					mySubs.get(cancel_arr_pos).c.getChannel().close();
+					
+					if(mySubs.get(cancel_arr_pos).c.getChannel().isOpen())
+					{
+						Toast.makeText(getApplicationContext(), "STILL OPEN", Toast.LENGTH_SHORT).show();
+						
+					}
+					else
+					{
+						Toast.makeText(getApplicationContext(), "CLOSED", Toast.LENGTH_SHORT).show();
+						mySubs.remove(cancel_arr_pos);
+					}
+					
+					
+				} catch (IOException e) {
+					Log.i("CANCEL SUB", "ERROR CANCELLING CONSUMER");
+					e.printStackTrace();
+				}
+				
+				
 				
 				
 				
@@ -387,19 +409,22 @@ public class MyService extends Service
 	private void subscribe(QueueingConsumer consumer) 
 	{
 		
+		
 		if(consumer!=null)
 		{
 			try 
 			{
-				Log.i("CONNECT", "Waiting for new messages from consumer" + consumer.getChannel());
+			//	Log.i("CONNECT", "Waiting for new messages from consumer" + consumer.getChannel());
 				QueueingConsumer.Delivery delivery = consumer.nextDelivery();
-				Log.i("CONNECT", "MESSAGE ARRIVED");
+			
+				
+				
 				String message = new String(delivery.getBody());
 				String routingKey = delivery.getEnvelope().getRoutingKey();
 				String exch_name = delivery.getEnvelope().getExchange();
 				
 				
-				Log.i("MESSAGE ARRIVED", message);
+			
 				showNotification("new message: " + message );
 				Bundle b = new Bundle();
 				b.putString("MSG", message);
@@ -453,7 +478,7 @@ public class MyService extends Service
 		channel.queueBind(queueName, exchange, routing_key);
 		QueueingConsumer consumer = new QueueingConsumer(channel);
 		channel.basicConsume(queueName, true, consumer);
-		
+	
 		Log.i("CONNECTION", "CONSUMER: " + consumer.toString());
 		
 		return consumer;
