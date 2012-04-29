@@ -93,6 +93,7 @@ public class MyService extends Service
 	private static boolean isRunning = false; 
 //	private String Rest_Host = "http://192.168.1.84:3000/";
 
+
 	ArrayList<Messenger> mClients = new ArrayList<Messenger>();
 	int mValue = 0;
 	
@@ -113,7 +114,7 @@ public class MyService extends Service
 //	public static final int MSG_SET_STRING_VALUE = 4;
 	public static final int MSG_CONNECT = 5;
 //	public static final int MSG_CONNECT_QUEUE = 6;
-//	public static final int MSG_POST_USER = 7;
+	public static final int MSG_POST_USER = 7;
 //	public static final int MSG_PUT_USER = 8;
 	public static final int MSG_GET_USER_REQUEST = 9;
 
@@ -263,12 +264,18 @@ public class MyService extends Service
 					Log.i("CANCEL SUB", "ERROR CANCELLING CONSUMER");
 					e.printStackTrace();
 				}
+
 				
+				break;
+			case MSG_POST_USER:
+				String host = msg.getData().get("host").toString();
+				String user_fname = msg.getData().get("fname").toString();
+				String user_lname = msg.getData().get("lname").toString();
+				int user_age = msg.getData().getInt("age");
 				
-				
-				
-				
-				
+				Log.i("ARGS", host + ":" + user_fname + ":" +  user_lname + ":" + user_age);
+				PostUserToServer(host, user_fname, user_lname, String.valueOf(user_age), user_fname + "_" + user_lname + "_" + String.valueOf(user_age));
+				 
 				
 				
 				break;
@@ -571,35 +578,44 @@ public class MyService extends Service
 	/**
 	 * REST POST FUNCTION
 	 */
-//	public void PostUserToServer(String first_name, String last_name, String age, String exchange)
-//	{
-//		String h = Rest_Host + "users";
-//		RestClient client = new RestClient(h);
-//		
-//		client.AddParam("user[first_name]", first_name);
-//		client.AddParam("user[last_name]", last_name);
-//		client.AddParam("user[age]", age);
-//		client.AddParam("user[exchange_name]", exchange);
-//		
-//	
-//
-//		try 
-//		{
-//			client.Execute(RequestMethod.POST);
-//			
-//		} 
-//		catch (Exception e) 
-//		{
-//			Toast.makeText(getApplicationContext(), "Erro: " + e.getMessage(), Toast.LENGTH_LONG).show();
-//			e.printStackTrace();
-//		}
-//
-//		
-//		if(client.getResponseCode() == 302)
-//			Toast.makeText(getApplicationContext(), "Dados submetidos com sucesso! ", Toast.LENGTH_LONG).show();
-//		else
-//			Toast.makeText(getApplicationContext(), "ERRO", Toast.LENGTH_LONG).show();
-//	}
+	public void PostUserToServer(String host, String first_name, String last_name, String age, String exchange)
+	{
+	
+		
+		RestClient client = new RestClient(host);
+		
+		client.AddParam("user[first_name]", first_name);
+		client.AddParam("user[last_name]", last_name);
+		client.AddParam("user[age]", age);
+		client.AddParam("user[exchange_name]", exchange);
+		
+		try 
+		{
+			client.Execute(RequestMethod.POST);
+			
+		} 
+		catch (Exception e) 
+		{
+			Toast.makeText(getApplicationContext(), "Erro: utilizador j‡ existente" + e.getMessage(), Toast.LENGTH_LONG).show();
+			e.printStackTrace();
+		}
+
+		
+		if(client.getResponseCode() == 302)
+		{
+			Toast.makeText(getApplicationContext(), "Dados submetidos com sucesso! ", Toast.LENGTH_LONG).show();
+			Bundle b = new Bundle();
+			b.putInt("rsp_code", 302);
+			
+			notifyGetUsersRsp(b, MSG_POST_USER);
+			
+			
+		}
+		else
+			Toast.makeText(getApplicationContext(), "ERRO", Toast.LENGTH_LONG).show();
+		
+		
+	}
 	
 	/**
 	 * REST GET FUNCTION
