@@ -1,92 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/RelativeLayout01"
-    android:layout_width="wrap_content"
-    android:layout_height="wrap_content" >
-
-    <Button
-        android:id="@+id/topicBtn"
-        android:layout_width="wrap_content"
-        android:layout_height="50dp"
-        android:layout_alignParentRight="true"
-        android:layout_alignParentTop="true"
-        android:text="Topic Subscribe" />
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/background"
+    android:gravity="center" >
 
     <ToggleButton
         android:id="@+id/serviceToggleButton"
-        android:layout_width="wrap_content"
-        android:layout_height="50dp"
-        android:layout_alignBottom="@+id/listenQueueBtn2"
+        android:layout_width="200dp"
+        android:layout_height="100dp"
         android:layout_alignParentLeft="true"
-        android:layout_alignParentTop="true"
         android:onClick="onToggleClicked"
         android:textOff="Service Off"
         android:textOn="Service On" />
-
-    <Button
-        android:id="@+id/listenQueueBtn2"
-        android:layout_width="wrap_content"
-        android:layout_height="50dp"
-        android:layout_alignParentTop="true"
-        android:layout_toRightOf="@+id/serviceToggleButton"
-        android:text="Subs 2" />
-
-    <Button
-        android:id="@+id/listenQueueBtn"
-        android:layout_width="wrap_content"
-        android:layout_height="50dp"
-        android:layout_alignParentTop="true"
-        android:layout_toRightOf="@+id/listenQueueBtn2"
-        android:text="Subs 1" />
-
-    <ScrollView
-        android:id="@+id/scrollView1"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignParentBottom="true"
-        android:layout_alignParentLeft="true"
-        android:layout_alignParentRight="true" >
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="match_parent" >
-
-            <TextView
-                android:id="@+id/textViewMessages"
-                android:layout_width="match_parent"
-                android:layout_height="396dp"
-                android:text="List incoming messages" />
-
-        </LinearLayout>
-    </ScrollView>
-
-    <Button
-        android:id="@+id/getUsersBtn"
-        style="?android:attr/buttonStyleSmall"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignParentLeft="true"
-        android:layout_below="@+id/serviceToggleButton"
-        android:text="Get Users" />
-
-    <Button
-        android:id="@+id/PostUserBtn"
-        style="?android:attr/buttonStyleSmall"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignBottom="@+id/getUsersBtn"
-        android:layout_toRightOf="@+id/getUsersBtn"
-        android:text="Post User" />
-
-    <Button
-        android:id="@+id/PutUserBtn"
-        style="?android:attr/buttonStyleSmall"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignBottom="@+id/PostUserBtn"
-        android:layout_toRightOf="@+id/PostUserBtn"
-        android:text="Put User" />
-    
-   
 
 </RelativeLayout>

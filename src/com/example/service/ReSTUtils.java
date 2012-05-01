@@ -21,58 +21,99 @@ import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.message.BasicNameValuePair;
 import org.apache.http.protocol.HTTP;
 
-public class RestClient {
+/** @class ReSTUtils
+*  @brief Implementa&ccedil;&atilde;o de m&eacute;todos para interagir com servi&ccedil;o ReST.
+*  
+*   Permite facilmente adicionar Headers e executar pedidos HTTP GET, PUT e POST
+*/
+public class ReSTUtils {
 
-	private ArrayList <NameValuePair> params;
-	private ArrayList <NameValuePair> headers;
+	private ArrayList <NameValuePair> params;	/**< par&acirc;metros do pedido */
+	private ArrayList <NameValuePair> headers; /**<  Headers do pedido */
 
-	private String url;
+	private String url; /**< Url para efetuar pedido */
 
-	private int responseCode;
-	private String message;
+	private int responseCode; /**< C&oacute;digo da resposta do pedido */
+	private String message;	/**< Mensagem de erro */
 
-	private String response;
+	private String response; /**< Resposta do servidor ReST ao pedido relaizado */
 
+	/** Enumera&ccedil;&atilde;o de tipos de pedidos HTTP.
+	 * 
+	 * Tipos de pedidos permitidos: GET, PUT, POST
+	 */
+	public enum RequestMethod
+	{
+		GET,	/**< Pedido HTTP GET*/
+		POST,	/**< Pedido HTTP POST*/
+		PUT,	/**< Pedido HTTP PUT*/
+	}
+	
+	
+	/**
+	 * Obt&eacute;m resposta do servidor
+	 * @return reposta de servidor ReST
+	 */
 	public String getResponse() 
 	{
 		return response;
 	}
-
+	
+	/**
+	 * Obt&eacute;m mensagem de erro do servidor
+	 * @return detalhes sobre erro em caso de erro no pedido
+	 */
 	public String getErrorMessage() 
 	{
 		return message;
 	}
 
+	/**
+	 * Obt&eacute;m c&oacute;digo de resposta do servidor
+	 * @return c&oacute;digo da reposta do servidor ReST
+	 */
 	public int getResponseCode() 
 	{
 		return responseCode;
 	}
 
-	public RestClient(String url)
+	/**
+	 * Construtor do objeto
+	 * @param url Url que define o destino do pedido
+	 */
+	public ReSTUtils(String url)
 	{
 		this.url = url;
 		params = new ArrayList<NameValuePair>();
 		headers = new ArrayList<NameValuePair>();
 	}
 
+	/**
+	 * Adiciona par&acirc;metros ao pedido
+	 * @param name nome do par&acirc;metro
+	 * @param value valor que ele toma
+	 */
 	public void AddParam(String name, String value)
 	{
 		params.add(new BasicNameValuePair(name, value));
 	}
 	
-	
+	/**
+	 * Adiciona headers ao pedido
+	 * @param name nome do header
+	 * @param value valor que ele toma
+	 */
 	public void AddHeader(String name, String value)
 	{
 		headers.add(new BasicNameValuePair(name, value));
 	}
 
-	public enum RequestMethod
-	{
-		GET,
-		POST,
-		PUT
-	}
 
+	/**
+	 * Executa o m&eacute;todo passado em argumento
+	 * @param method Tipo de opera&ccedil;&atilde;o HTTP
+	 * @throws Exception Em caso de erro lan&ccedil;a excep&ccedil;&atilde;o
+	 */
 	public void Execute(RequestMethod method) throws Exception
 	{
 		switch(method) 
@@ -145,6 +186,11 @@ public class RestClient {
 		}
 	}
 
+	/**
+	 * Executa o pedido HTTP
+	 * @param request Pedido HTTP
+	 * @param url Url de destino do pedido
+	 */
 	private void executeRequest(HttpUriRequest request, String url)
 	{
 		HttpClient client = new DefaultHttpClient();
@@ -164,7 +210,6 @@ public class RestClient {
 				InputStream instream = entity.getContent();
 				response = convertStreamToString(instream);
 
-				// Closing the input stream will trigger connection release
 				instream.close();
 			}
 
@@ -179,6 +224,11 @@ public class RestClient {
 		}
 	}
 
+	/**
+	 * Converte streams para strings
+	 * @param is stream de entrada
+	 * @return String correspondente ao stream de entrada
+	 */
 	private static String convertStreamToString(InputStream is) 
 	{
 		BufferedReader reader = new BufferedReader(new InputStreamReader(is));
